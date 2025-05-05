@@ -18,7 +18,8 @@ data class AppUsageEntity(
 data class AppUsageSummary(
     val packageName: String,
     val totalDuration: Long,
-    val launchCount: Int
+    val launchCount: Int,
+    val who: Int
 )
 
 @Dao
@@ -53,6 +54,7 @@ interface AppUsageDao {
     """)
     suspend fun getTotalUsageTime(packageName: String, startTime: Long, endTime: Long): Long?
 
+
     @Query("""
         SELECT 
         strftime('%H', datetime(startTime / 1000, 'unixepoch', 'localtime')) as hourOfDay,
@@ -62,7 +64,7 @@ interface AppUsageDao {
         GROUP BY hourOfDay
         ORDER BY hourOfDay
     """)
-    suspend fun getUsageByHourOfDay(packageName: String, startTime: Long, endTime: Long): Map<String, Long>
+    suspend fun getUsageByHourOfDay(packageName: String, startTime: Long, endTime: Long): Map<@MapColumn(columnName = "hourOfDay") String, @MapColumn(columnName = "totalDuration") Long>
 }
 
 @Database(entities = [AppUsageEntity::class], version = 1, exportSchema = false)

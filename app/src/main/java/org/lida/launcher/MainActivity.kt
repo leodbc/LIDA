@@ -1,5 +1,6 @@
 package org.lida.launcher
 
+import android.app.Activity
 import android.app.role.RoleManager
 import android.os.Build
 import android.os.Bundle
@@ -20,12 +21,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import org.lida.launcher.utils.UsagePermissionHelper
 import org.lida.launcher.utils.AppUsageServiceManager
+import android.view.WindowInsets
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
@@ -35,11 +41,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            if (UsagePermissionHelper.hasUsageStatsPermission(this)) {
-                AppUsageServiceManager.startMonitoringService(this)
-            } else {
-                UsagePermissionHelper.requestUsageStatsPermission(this)
-            }
+            // maybe start some service later
         } else {
             Log.d(TAG, "Role not granted")
         }
@@ -48,9 +50,16 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (UsagePermissionHelper.hasUsageStatsPermission(this)) {
+            AppUsageServiceManager.startMonitoringService(this)
+        } else {
+            UsagePermissionHelper.requestUsageStatsPermission(this)
+        }
         enableEdgeToEdge()
+
         setContent {
-            LIDATheme {
+            LIDATheme(dynamicColor = false) {
+                SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -82,7 +91,7 @@ fun SetupScreen() {
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier
@@ -95,27 +104,8 @@ fun SetupScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(48.dp))
-                    // Logo with fading effect
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "L.I.D.A.",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "L.I.D.A.",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                        )
-                        Text(
-                            text = "L.I.D.A.",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-                        )
-                    }
+
+                    Logo()
 
                     Spacer(modifier = Modifier.height(48.dp))
 
@@ -203,5 +193,47 @@ fun SetupScreen() {
                     )
                 }
             }
+    }
+}
+
+@Composable
+fun Logo() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "L.I.D.A.",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "L.I.D.A.",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+        )
+        Text(
+            text = "L.I.D.A.",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
+        )
+    }
+}
+
+@Composable
+fun SetStatusBarColor(color: Int) {
+    val view = LocalView.current
+    val window = (view.context as Activity).window
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) { // Android 15+
+        window.decorView.setOnApplyWindowInsetsListener { view, insets ->
+            val statusBarInsets = insets.getInsets(WindowInsets.Type.statusBars())
+            view.setBackgroundColor(color)
+            view.setPadding(0, statusBarInsets.top, 0, 0)
+            insets
+        }
+    } else {
+        // For Android 14 and below
+        @Suppress("DEPRECATION")
+        window.statusBarColor = color
     }
 }

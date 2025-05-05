@@ -1,34 +1,30 @@
 package org.lida.launcher.service
 
-import android.app.Service
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
+import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
+import android.os.Build
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.room.Room
+import kotlinx.coroutines.*
+import java.util.concurrent.TimeUnit
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import org.lida.launcher.database.AppUsageDatabase
 import org.lida.launcher.database.AppUsageEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 class AppUsageService : Service() {
     private val TAG = "AppUsageService"
-    private val POLLING_INTERVAL = TimeUnit.SECONDS.toMillis(30)
+    private val POLLING_INTERVAL_MS = TimeUnit.SECONDS.toMillis(1)
 
     private lateinit var usageStatsManager: UsageStatsManager
-    private val handler = Handler(Looper.getMainLooper())
-    private var lastForegroundApp = ""
-    private var lastTimeStamp = 0L
-
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+
+    private var lastForegroundApp = ""
+    private var lastTimeStamp = 0L
 
     private val database by lazy {
         Room.databaseBuilder(
@@ -40,25 +36,25 @@ class AppUsageService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+        startForegroundServiceWithNotification()
         startMonitoring()
         Log.d(TAG, "AppUsageService created")
     }
 
     private fun startMonitoring() {
-        handler.post(object : Runnable {
-            override fun run() {
+        serviceScope.launch {
+            while (isActive) {
                 checkCurrentApp()
-                handler.postDelayed(this, POLLING_INTERVAL)
+                delay(POLLING_INTERVAL_MS)
             }
-        })
+        }
     }
 
     private fun checkCurrentApp() {
         val endTime = System.currentTimeMillis()
         val startTime = endTime - 5000
-
-        val currentUserId = 1 // need to get the current user ID
+        val currentUserId = 1 // TODO; replace with user id
 
         val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
         val event = UsageEvents.Event()
@@ -130,12 +126,36 @@ class AppUsageService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacksAndMessages(null)
         serviceJob.cancel()
         Log.d(TAG, "Service destroyed")
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        return null // We don't provide binding
+        return null
+    }
+
+    private fun startForegroundServiceWithNotification() {
+        val channelId = "app_usage_service_channel"
+        val channelName = "App Usage Monitoring"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager =
+                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Monitoring App Usage")
+            .setContentText("This service is tracking your app usage.")
+            .setSmallIcon(android.R.drawable.ic_menu_info_details)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+
+        startForeground(1, notification)
     }
 }

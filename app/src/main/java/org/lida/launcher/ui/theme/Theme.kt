@@ -1,6 +1,5 @@
 package org.lida.launcher.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,7 +8,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -26,7 +24,7 @@ private val DarkColorScheme = darkColorScheme(
     surface = md_dark_surface,
     onSurface = md_dark_onSurface,
     error = md_dark_error,
-    onError = md_dark_onError
+    onError = md_dark_onError,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -43,7 +41,7 @@ private val LightColorScheme = lightColorScheme(
     surface = md_light_surface,
     onSurface = md_light_onSurface,
     error = md_light_error,
-    onError = md_light_onError
+    onError = md_light_onError,
 )
 
 @Composable
