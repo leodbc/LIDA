@@ -23,16 +23,18 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.ui.theme.LIDATheme
+import org.lida.launcher.utils.AppUsageServiceManager
 
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private val roleRequestLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            // start some service?
+
         } else {
             Log.d(TAG, "Role not granted")
         }

@@ -9,6 +9,7 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
 
     <application
@@ -47,8 +48,7 @@
             android:name=".service.AppUsageService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync"
-            tools:ignore="ForegroundServicePermission" />
+            android:foregroundServiceType="dataSync" />
     </application>
 
 
