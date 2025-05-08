@@ -1,6 +1,8 @@
 package org.lida.launcher.utils
 
+import android.app.ActivityManager
 import android.content.Context
+import android.content.Context.ACTIVITY_SERVICE
 import android.content.Intent
 import android.os.Build
 import android.util.Log
@@ -13,6 +15,8 @@ object AppUsageServiceManager {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     fun startMonitoringService(context: Context): Boolean {
+        if (isRunning(context)) return true
+
         return if (UsagePermissionHelper.hasUsageStatsPermission(context)) {
             Log.d(TAG, "Starting app usage monitoring service")
             val serviceIntent = Intent(context, AppUsageService::class.java)
@@ -29,4 +33,13 @@ object AppUsageServiceManager {
         val serviceIntent = Intent(context, AppUsageService::class.java)
         context.stopService(serviceIntent)
     }
+
+    fun isRunning(context: Context): Boolean {
+        val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        return manager.getRunningServices(Int.MAX_VALUE)
+            .any { it.service.className == "AppUsageServiceManager" }
+    }
+
 }
+
+
