@@ -25,7 +25,6 @@ import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.utils.AppUsageServiceManager
 
-
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
 
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-
+            Log.d(TAG, "Role granted successfully")
         } else {
             Log.d(TAG, "Role not granted")
         }
@@ -47,30 +46,46 @@ class MainActivity : ComponentActivity() {
 
         val alreadySet = this.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("alreadySet", false)
 
-        if (!alreadySet)
-            startActivity(Intent(this, Setup::class.java))
-        else {
-            setContent {
-                LIDATheme(dynamicColor = false) {
-                    SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        AndroidLauncherHomeScreen()
-                    }
+        if (!alreadySet) {
+            val setupIntent = Intent(this, Setup::class.java)
+            setupIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(setupIntent)
+            finish()
+            return
+        }
+
+        AppUsageServiceManager.startMonitoringService(this)
+        setContent {
+            LIDATheme(dynamicColor = false) {
+                SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AndroidLauncherHomeScreen()
                 }
             }
+        }
 
-            val roleManager = getSystemService(RoleManager::class.java)
-            if (roleManager != null &&
-                roleManager.isRoleAvailable(RoleManager.ROLE_HOME) &&
-                !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
-            ) {
-                roleRequestLauncher.launch(
-                    roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
-                )
-            }
+        val roleManager = getSystemService(RoleManager::class.java)
+        if (roleManager != null &&
+            roleManager.isRoleAvailable(RoleManager.ROLE_HOME) &&
+            !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
+        ) {
+            roleRequestLauncher.launch(
+                roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
+            )
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val alreadySet = this.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("alreadySet", false)
+        if (!alreadySet) {
+            val setupIntent = Intent(this, Setup::class.java)
+            setupIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(setupIntent)
+            finish()
         }
     }
 }
@@ -87,7 +102,8 @@ fun AndroidLauncherHomeScreen(){
                 .align(Alignment.Center)
         ){
             Text(
-                text = "ALOOOO"
+                text = "ALOOOO",
+                color = MaterialTheme.colorScheme.onBackground // Ensure text color contrasts with background
             )
         }
     }
