@@ -24,6 +24,8 @@ import androidx.core.view.WindowCompat
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.utils.AppUsageServiceManager
+import org.lida.launcher.components.AppList
+import org.lida.launcher.database.AppItem
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
@@ -56,6 +58,15 @@ class MainActivity : ComponentActivity() {
 
         AppUsageServiceManager.startMonitoringService(this)
         setContent {
+            val context = LocalContext.current
+            val pm = context.packageManager
+            val apps = remember {
+                pm.getInstalledApplications(0).map { appInfo ->
+                    val name = pm.getApplicationLabel(appInfo).toString()
+                    val icon = pm.getApplicationIcon(appInfo)
+                    AppItem(name, icon)
+                }
+            }
             LIDATheme(dynamicColor = false) {
                 SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
                 Surface(
@@ -91,7 +102,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AndroidLauncherHomeScreen(){
+fun AndroidLauncherHomeScreen(apps: List<AppItem>){
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -105,6 +116,7 @@ fun AndroidLauncherHomeScreen(){
                 text = "ALOOOO",
                 color = MaterialTheme.colorScheme.onBackground // Ensure text color contrasts with background
             )
+            AppList(apps = apps)
         }
     }
 }
