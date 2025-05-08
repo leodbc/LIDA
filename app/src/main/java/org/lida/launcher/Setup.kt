@@ -1,6 +1,5 @@
 package org.lida.launcher
 
-import android.app.Activity.RESULT_OK
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Build
@@ -170,12 +169,15 @@ fun SetupScreen(context: ComponentActivity){
             }
 
             Button(
-                onClick = { context.getSharedPreferences("settings", MODE_PRIVATE).edit() { putBoolean(
-                            "alreadySet",
-                            true
-                            ) }
-                    context.startActivity(Intent(context, MainActivity::class.java))
-                    context.finishActivity(RESULT_OK)},
+                onClick = {
+                            context.getSharedPreferences("settings", MODE_PRIVATE).edit() {
+                                putBoolean("alreadySet", true)
+                            }
+                            val intent = Intent(context, MainActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            context.startActivity(intent)
+                            context.finish()
+                          },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
