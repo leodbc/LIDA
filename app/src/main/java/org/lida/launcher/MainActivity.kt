@@ -21,6 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.runtime.remember
+
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.utils.AppUsageServiceManager
@@ -58,22 +62,42 @@ class MainActivity : ComponentActivity() {
 
         AppUsageServiceManager.startMonitoringService(this)
         setContent {
-            val context = LocalContext.current
-            val pm = context.packageManager
             val apps = remember {
-                pm.getInstalledApplications(0).map { appInfo ->
-                    val name = pm.getApplicationLabel(appInfo).toString()
-                    val icon = pm.getApplicationIcon(appInfo)
-                    AppItem(name, icon)
-                }
+                listOf(
+                    AppItem(
+                        "Khan Academy",
+                        R.drawable.khan_academy
+                    ),
+                    AppItem(
+                        "Bedtime Math",
+                        R.drawable.bedtime_math
+                    ),
+                    AppItem(
+                        "DragonBox Numbers",
+                        R.drawable.dragonbox_numbers
+                    ),
+                    AppItem(
+                        "Duolingo",
+                        R.drawable.duolingo
+                    ),
+                    AppItem(
+                        "Lightbot",
+                        R.drawable.lightbot
+                    ),
+                    AppItem(
+                        "Lightbot Jr",
+                        R.drawable.lightbot_jr
+                    )
+                )
             }
+
             LIDATheme(dynamicColor = false) {
                 SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AndroidLauncherHomeScreen()
+                    AndroidLauncherHomeScreen(apps = apps)
                 }
             }
         }

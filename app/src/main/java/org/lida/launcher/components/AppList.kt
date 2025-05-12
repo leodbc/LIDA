@@ -1,6 +1,6 @@
 package org.lida.launcher.components
 
-//import androidx.compose.foundation.Image
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -8,13 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.graphics.asImageBitmap
-//import androidx.compose.ui.graphics.painter.Painter
-//import androidx.compose.ui.graphics.painter.BitmapPainter
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.unit.dp
-//import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.res.painterResource
 import org.lida.launcher.database.AppItem
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppList(apps: List<AppItem>) {
@@ -23,20 +19,21 @@ fun AppList(apps: List<AppItem>) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
             ) {
                 Text(
                     text = app.name,
                     style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 24.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-//                Image(
-//                    bitmap = app.icon.toBitmap().asImageBitmap(),
-//                    contentDescription = app.name,
-//                    modifier = Modifier
-//                        .size(48.dp)
-//                        .padding(end = 8.dp)
-//                )
+                Image(
+                    painter = painterResource(app.iconref),
+                    contentDescription = app.name,
+                    modifier = Modifier
+                        .size(84.dp)
+                        .padding(end = 8.dp)
+                )
             }
         }
     }
