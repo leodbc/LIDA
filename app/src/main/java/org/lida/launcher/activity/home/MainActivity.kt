@@ -1,4 +1,4 @@
-package org.lida.launcher
+package org.lida.launcher.activity.home
 
 import android.app.role.RoleManager
 import android.content.Intent
@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import org.lida.launcher.components.SetStatusBarColor
+import org.lida.launcher.activity.setup.LegalInfo
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.utils.AppUsageServiceManager
 
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
         val alreadySet = this.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("alreadySet", false)
 
         if (!alreadySet) {
-            val setupIntent = Intent(this, Setup::class.java)
+            val setupIntent = Intent(this, LegalInfo::class.java)
             setupIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(setupIntent)
             finish()
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         val alreadySet = this.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("alreadySet", false)
         if (!alreadySet) {
-            val setupIntent = Intent(this, Setup::class.java)
+            val setupIntent = Intent(this, LegalInfo::class.java)
             setupIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(setupIntent)
             finish()

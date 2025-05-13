@@ -1,21 +1,19 @@
 package org.lida.launcher.service
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.room.Room
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
-import org.lida.launcher.database.AppUsageDatabase
 import org.lida.launcher.database.AppUsageEntity
+import org.lida.launcher.database.LauncherDatabase
 
-class AppUsageService : Service() {
+class AppUsageService() : Service() {
     private val TAG = "AppUsageService"
     private val POLLING_INTERVAL_MS = TimeUnit.SECONDS.toMillis(1)
 
@@ -26,13 +24,7 @@ class AppUsageService : Service() {
     private var lastForegroundApp = ""
     private var lastTimeStamp = 0L
 
-    private val database by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            AppUsageDatabase::class.java,
-            "app_usage_database"
-        ).build()
-    }
+    private val database by lazy { LauncherDatabase.getDatabase(this) }
 
     override fun onCreate() {
         super.onCreate()

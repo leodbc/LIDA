@@ -1,22 +1,17 @@
 package org.lida.launcher.repo
 
 import android.content.Context
-import androidx.room.Room
-import org.lida.launcher.database.AppUsageDatabase
 import org.lida.launcher.database.AppUsageEntity
 import org.lida.launcher.database.AppUsageSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.lida.launcher.database.LauncherDatabase
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 
 class AppUsageRepository(context: Context) {
-    private val database = Room.databaseBuilder(
-        context.applicationContext,
-        AppUsageDatabase::class.java,
-        "app_usage_database"
-    ).build()
+    private val database = LauncherDatabase.getDatabase(context)
 
     private val appUsageDao = database.appUsageDao()
 
