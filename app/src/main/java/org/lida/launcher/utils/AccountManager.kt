@@ -17,18 +17,18 @@ class AccountManager private constructor(context: Context) {
 
     suspend fun createUser(
         username: String,
-        displayName: String,
         password: String,
         educationLevel: Int,
+        age: Int,
         accountType: String,
         iconResId: Int,
         iconColor: Int
     ): Long {
         return userRepository.createUser(
             username = username,
-            displayName = displayName,
             password = password,
             educationLevel = educationLevel,
+            age = age,
             accountType = accountType,
             iconResId = iconResId,
             iconColor = iconColor

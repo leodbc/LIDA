@@ -18,10 +18,10 @@ data class UserEntity(
     val userId: Long = 0,
 
     val username: String,
-    val displayName: String,
-    val password: String,
+    val password: String, // only for parents
     val educationLevel: Int,
-    val accountType: String, // "student", "teacher", "parent"
+    val age: Int,
+    val accountType: String, // "student" or "parent"
     val isCurrentUser: Boolean = false,
     val iconResId: Int = R.drawable.default_icon,
     val iconColor: Int = Color.BLUE
