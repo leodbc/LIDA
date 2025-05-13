@@ -1,6 +1,5 @@
-package org.lida.launcher
+package org.lida.launcher.activity.setup
 
-import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -43,13 +42,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import org.lida.launcher.components.Logo
 import org.lida.launcher.ui.theme.LIDATheme
-import androidx.core.content.edit
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.utils.AppUsageServiceManager
 import org.lida.launcher.utils.UsagePermissionHelper
 
 
-class Setup(): ComponentActivity() {
+class LegalInfo(): ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onResume() {
@@ -69,7 +67,7 @@ class Setup(): ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SetupScreen(this)
+                    LegalInfoScreen(this)
                 }
             }
         }
@@ -77,7 +75,7 @@ class Setup(): ComponentActivity() {
 }
 
 @Composable
-fun SetupScreen(context: ComponentActivity){
+fun LegalInfoScreen(context: ComponentActivity){
     var count by remember { mutableIntStateOf(1) }
 
     Box(
@@ -170,13 +168,9 @@ fun SetupScreen(context: ComponentActivity){
 
             Button(
                 onClick = {
-                            context.getSharedPreferences("settings", MODE_PRIVATE).edit() {
-                                putBoolean("alreadySet", true)
-                            }
-                            val intent = Intent(context, MainActivity::class.java)
+                            val intent = Intent(context, CreateAccount::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             context.startActivity(intent)
-                            context.finish()
                           },
                 modifier = Modifier
                     .fillMaxWidth()

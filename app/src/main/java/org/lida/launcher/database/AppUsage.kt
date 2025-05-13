@@ -65,9 +65,8 @@ interface AppUsageDao {
         ORDER BY hourOfDay
     """)
     suspend fun getUsageByHourOfDay(packageName: String, startTime: Long, endTime: Long): Map<@MapColumn(columnName = "hourOfDay") String, @MapColumn(columnName = "totalDuration") Long>
-}
 
-@Database(entities = [AppUsageEntity::class], version = 1, exportSchema = false)
-abstract class AppUsageDatabase : RoomDatabase() {
-    abstract fun appUsageDao(): AppUsageDao
+    @Query("SELECT packageName, SUM(durationMs) as totalDuration, COUNT(*) as launchCount, who " +
+           "FROM app_usage WHERE who = :who GROUP BY packageName, who")
+    suspend fun getAppUsageSummary(who: Int): List<AppUsageSummary>
 }
