@@ -12,9 +12,9 @@ class UserRepository(private val userDao: UserDao) {
 
     suspend fun createUser(
         username: String,
-        displayName: String,
         password: String,
         educationLevel: Int,
+        age: Int,
         accountType: String,
         iconResId: Int,
         iconColor: Int
@@ -26,9 +26,9 @@ class UserRepository(private val userDao: UserDao) {
 
         val user = UserEntity(
             username = username,
-            displayName = displayName,
             password = password,
             educationLevel = educationLevel,
+            age = age,
             accountType = accountType,
             iconResId = iconResId,
             iconColor = iconColor

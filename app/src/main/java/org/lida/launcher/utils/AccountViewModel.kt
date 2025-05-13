@@ -14,17 +14,17 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
     suspend fun createUser(
         username: String,
-        displayName: String,
         password: String,
         educationLevel: Int,
+        age: Int,
         accountType: String
     ): Result<Long> {
         return try {
             val userId = accountManager.createUser(
                 username = username,
-                displayName = displayName,
                 password = password,
                 educationLevel = educationLevel,
+                age = age,
                 accountType = accountType,
                 iconResId = R.drawable.default_icon,
                 iconColor = Color.BLUE
