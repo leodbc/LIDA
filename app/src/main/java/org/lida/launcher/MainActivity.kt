@@ -66,27 +66,28 @@ class MainActivity : ComponentActivity() {
                 listOf(
                     AppItem(
                         "Khan Academy",
-                        R.drawable.khan_academy
+                        R.drawable.khan_academy,
+                        "https://play.google.com/store/apps/details?id=org.khanacademy.android&hl=pt_BR&pli=1"
                     ),
                     AppItem(
                         "Bedtime Math",
-                        R.drawable.bedtime_math
+                        R.drawable.bedtime_math,
+                        "https://play.google.com/store/apps/details?id=org.BedtimeMath.BedtimeMath"
                     ),
                     AppItem(
                         "DragonBox Numbers",
-                        R.drawable.dragonbox_numbers
+                        R.drawable.dragonbox_numbers,
+                        "https://play.google.com/store/apps/details?id=com.kahoot.numbers&hl=pt_BR"
                     ),
                     AppItem(
                         "Duolingo",
-                        R.drawable.duolingo
+                        R.drawable.duolingo,
+                        "https://play.google.com/store/apps/details?id=com.duolingo&hl=pt_BR"
                     ),
                     AppItem(
-                        "Lightbot",
-                        R.drawable.lightbot
-                    ),
-                    AppItem(
-                        "Lightbot Jr",
-                        R.drawable.lightbot_jr
+                        "Mimo",
+                        R.drawable.mimo,
+                        "https://play.google.com/store/apps/details?id=com.getmimo&hl=pt_BR"
                     )
                 )
             }
