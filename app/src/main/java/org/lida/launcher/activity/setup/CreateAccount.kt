@@ -189,7 +189,16 @@ fun CreateAccountScreen(
     onCreateAnotherClick: () -> Unit,
     context: Context = LocalContext.current
 ) {
-    val headerOptions = Options().apply { have_back_button = true }
+    val headerOptions = Options().apply {
+        have_back_button = true
+        onBackClick = {
+            if (formData.showForm) {
+                onFormDataChange(formData.copy(showForm = false))
+            } else {
+                (context as Activity).finish()
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -395,7 +404,10 @@ fun AccountForm(
         ) {
             listOf("student", "parent").forEach { type ->
                 Button(
-                    onClick = { onFormDataChange(formData.copy(accountType = type)) },
+                    onClick = {
+                        onFormDataChange(formData.copy(accountType = type))
+                        onFormDataChange(formData.copy(password = ""))
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (formData.accountType == type) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary
                     )

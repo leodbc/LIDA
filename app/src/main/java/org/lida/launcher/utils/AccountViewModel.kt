@@ -117,4 +117,8 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
     suspend fun getIconResColor(): Int {
         return accountManager.getIconColor()
     }
+
+    suspend fun getAllUsers(): List<UserEntity> {
+        return accountManager.getAllUsers()
+    }
 }
