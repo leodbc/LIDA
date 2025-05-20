@@ -9,25 +9,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import org.lida.launcher.AndroidLauncherHomeScreen
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.activity.setup.LegalInfo
 import org.lida.launcher.ui.theme.LIDATheme
+import org.lida.launcher.utils.AccountViewModel
 import org.lida.launcher.utils.AppUsageServiceManager
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
+    private lateinit var accountViewModel: AccountViewModel
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private val roleRequestLauncher = registerForActivityResult(
@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        accountViewModel = ViewModelProvider(this)[AccountViewModel::class.java]
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val alreadySet = this.getSharedPreferences("settings", MODE_PRIVATE).getBoolean("alreadySet", false)
@@ -55,6 +56,15 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        lifecycleScope.launch {
+            if (!accountViewModel.isUserLoggedIn()) {
+                val loginIntent = Intent(this@MainActivity, LoginActivity::class.java)
+                startActivity(loginIntent)
+                finish()
+                return@launch
+            }
+        }
+
         AppUsageServiceManager.startMonitoringService(this)
         setContent {
             LIDATheme(dynamicColor = false) {
@@ -63,7 +73,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AndroidLauncherHomeScreen()
+                    AndroidLauncherHomeScreen(accountViewModel)
                 }
             }
         }
@@ -91,21 +101,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun AndroidLauncherHomeScreen(){
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Column (
-            modifier = Modifier
-                .align(Alignment.Center)
-        ){
-            Text(
-                text = "ALOOOO",
-                color = MaterialTheme.colorScheme.onBackground // Ensure text color contrasts with background
-            )
-        }
-    }
-}

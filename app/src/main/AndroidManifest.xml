@@ -47,6 +47,11 @@
             android:exported="true"
             android:theme="@style/Theme.LIDA">
         </activity>
+        <activity
+            android:name=".activity.home.LoginActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LIDA">
+        </activity>
 
 
         <service
