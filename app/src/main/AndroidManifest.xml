@@ -52,6 +52,12 @@
             android:exported="true"
             android:theme="@style/Theme.LIDA">
         </activity>
+        <activity
+            android:name=".activity.home.AppList"
+            android:exported="false"
+            android:label="Second Activity"
+            android:theme="@style/Theme.LIDA">
+        </activity>
 
 
         <service
