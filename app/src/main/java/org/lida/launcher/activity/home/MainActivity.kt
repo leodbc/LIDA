@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    // Column(modifier = Modifier.fillMaxSize()) {
                         AndroidLauncherHomeScreen(accountViewModel)
 
                         Button(
@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text(text = "Ir para lista de apps")
                         }
-                    }
+                    // }
                 }
             }
         }

@@ -6,8 +6,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -21,8 +22,11 @@ import org.lida.launcher.R
 import org.lida.launcher.components.AppIcon
 import org.lida.launcher.components.AppItem
 import org.lida.launcher.ui.theme.LIDATheme
+import org.lida.launcher.components.SetStatusBarColor
 
-class SecondActivity : ComponentActivity() {
+// https://stackoverflow.com/questions/28679346/how-do-i-uninstall-and-re-run-an-app-on-a-device-using-android-studio
+// para testar
+class AppList : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -31,7 +35,6 @@ class SecondActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Assuming SetStatusBarColor is a Composable you have elsewhere
                     SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
                     AppListScreen()
                 }
@@ -66,6 +69,22 @@ fun AppListScreen() {
             it.name.contains(searchQuery, ignoreCase = true)
         }
 
+        if (apps.isNotEmpty()) {
+            val appCountText = if (searchQuery.isNotBlank() && filteredApps.size != apps.size) {
+                "${filteredApps.size} of ${apps.size} apps found"
+            } else {
+                "${apps.size} apps"
+            }
+            Text(
+                text = appCountText,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
             Text(
                 text = "No apps found for \"$searchQuery\"",
@@ -77,12 +96,17 @@ fun AppListScreen() {
         } else if (apps.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), // Set to 2 columns
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp), // Add padding around the grid
+                verticalArrangement = Arrangement.spacedBy(8.dp), // Spacing between rows
+                horizontalArrangement = Arrangement.spacedBy(8.dp), // Spacing between columns
+                modifier = Modifier.fillMaxSize()
+            ) {
                 items(filteredApps) { app ->
                     AppIcon(app = app) {
                         openApp(context, app.packageName)
                     }
-                    Divider()
                 }
             }
         }
@@ -91,14 +115,24 @@ fun AppListScreen() {
 
 fun loadInstalledApps(packageManager: PackageManager): List<AppItem> {
     val apps = mutableListOf<AppItem>()
-    val packages = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
 
-    for (p in packages) {
-        val appName = p.applicationInfo.loadLabel(packageManager).toString()
-        val packageName = p.packageName
-        val defaultIconResId = R.drawable.default_icon
+    // Create an Intent to query for launcher activities
+    val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+        addCategory(Intent.CATEGORY_LAUNCHER)
+    }
+
+    // Query for all activities that can be launched with the above intent
+    // PackageManager.MATCH_DEFAULT_ONLY: only include components that are enabled by default
+    // and match the default action in their manifest.
+    val resolveInfoList = packageManager.queryIntentActivities(mainIntent, 0)
+    val defaultIconResId = R.drawable.default_icon
+
+    for (resolveInfo in resolveInfoList) {
+        val packageName = resolveInfo.activityInfo.packageName
+        val appName = resolveInfo.loadLabel(packageManager).toString()
         apps.add(AppItem(appName, defaultIconResId, packageName, ""))
     }
+
     return apps.sortedBy { it.name.lowercase() }
 }
 
