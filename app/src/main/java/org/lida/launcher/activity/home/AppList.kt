@@ -116,14 +116,12 @@ fun AppListScreen() {
 fun loadInstalledApps(packageManager: PackageManager): List<AppItem> {
     val apps = mutableListOf<AppItem>()
 
-    // Create an Intent to query for launcher activities
+    // 1. Define the "Launcher App" Intent
     val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
         addCategory(Intent.CATEGORY_LAUNCHER)
     }
 
-    // Query for all activities that can be launched with the above intent
-    // PackageManager.MATCH_DEFAULT_ONLY: only include components that are enabled by default
-    // and match the default action in their manifest.
+    // 2. Query the PackageManager for matching activities
     val resolveInfoList = packageManager.queryIntentActivities(mainIntent, 0)
     val defaultIconResId = R.drawable.default_icon
 
