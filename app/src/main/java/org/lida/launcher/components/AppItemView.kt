@@ -16,18 +16,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.ui.graphics.ImageBitmap
 
 data class AppItem(
     val name: String,
-    val iconref: Int,
+    val icon: ImageBitmap,
     val packageName: String,
     val url: String
 )
+
+
 @Composable
 fun AppIcon(
     app: AppItem,
@@ -39,7 +40,6 @@ fun AppIcon(
             .width(80.dp)
             .clickable(onClick = onClick)
     ) {
-        // App Icon
         Box(
             modifier = Modifier
                 .size(60.dp)
@@ -48,14 +48,13 @@ fun AppIcon(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = app.iconref),
+                bitmap = app.icon,
                 contentDescription = app.name,
                 modifier = Modifier.size(40.dp),
                 contentScale = ContentScale.Fit
             )
         }
 
-        // App Name
         Text(
             text = app.name,
             style = MaterialTheme.typography.bodySmall,

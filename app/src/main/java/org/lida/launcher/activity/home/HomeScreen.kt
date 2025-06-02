@@ -1,4 +1,4 @@
-package org.lida.launcher
+package org.lida.launcher.activity.home
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,22 +15,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import org.lida.launcher.R
 import org.lida.launcher.components.AppIcon
 import org.lida.launcher.components.AppItem
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.utils.AccountViewModel
+import org.lida.launcher.utils.drawableToBitmap
 
 @Composable
 fun AndroidLauncherHomeScreen(viewModel: AccountViewModel) {
     val context = LocalContext.current
     val packageManager = context.packageManager
     var currentUser by remember { mutableStateOf<String?>(null) }
-
-    val educationalApps = remember { getEducationalApps() }
-    val systemApps = remember { getSystemApps() }
+    val defaultIconDrawable = ContextCompat.getDrawable(context, R.drawable.default_icon)!!
+    val bitmap = drawableToBitmap(defaultIconDrawable).asImageBitmap()
+    val educationalApps = remember { getEducationalApps(bitmap) }
+    val systemApps = remember { getSystemApps(bitmap) }
 
     val allApps = remember { educationalApps + systemApps }
 
@@ -86,7 +92,9 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel) {
 @Composable
 fun DockBar() {
     val context = LocalContext.current
-    val dockApps = remember { getDockApps() }
+    val defaultIconDrawable = ContextCompat.getDrawable(context, R.drawable.default_icon)!!
+    val bitmap = drawableToBitmap(defaultIconDrawable).asImageBitmap()
+    val dockApps = remember { getDockApps(bitmap) }
 
     Row(
         modifier = Modifier
@@ -97,6 +105,14 @@ fun DockBar() {
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Button(
+            onClick = {
+                val intent = Intent(context, AppList::class.java)
+                context.startActivity(intent)
+            },
+        ) {
+            Text(text = "Ir para lista de apps")
+        }
         dockApps.forEach { app ->
             IconButton(
                 onClick = {
@@ -131,99 +147,100 @@ fun DockBar() {
 }
 
 // Sample app data
-fun getEducationalApps(): List<AppItem> {
+fun getEducationalApps(default_icon: ImageBitmap): List<AppItem> {
+
     return listOf(
         AppItem(
             "Khan Academy",
-            R.drawable.default_icon,
+            default_icon,
             "org.khanacademy.android",
             "https://play.google.com/store/apps/details?id=org.khanacademy.android"
         ),
         AppItem(
             "Bedtime Math",
-            R.drawable.default_icon,
+            default_icon,
             "org.BedtimeMath.BedtimeMath",
             "https://play.google.com/store/apps/details?id=org.BedtimeMath.BedtimeMath"
         ),
         AppItem(
             "DragonBox",
-            R.drawable.default_icon,
+            default_icon,
             "com.kahoot.numbers",
             "https://play.google.com/store/apps/details?id=com.kahoot.numbers"
         ),
         AppItem(
             "Duolingo",
-            R.drawable.default_icon,
+            default_icon,
             "com.duolingo",
             "https://play.google.com/store/apps/details?id=com.duolingo"
         ),
         AppItem(
             "Mimo",
-            R.drawable.default_icon,
+            default_icon,
             "com.getmimo",
             "https://play.google.com/store/apps/details?id=com.getmimo"
         ),
         AppItem(
             "Photomath",
-            R.drawable.default_icon,
+            default_icon,
             "com.microblink.photomath",
             "https://play.google.com/store/apps/details?id=com.microblink.photomath"
         )
     )
 }
 
-fun getSystemApps(): List<AppItem> {
+fun getSystemApps(default_icon: ImageBitmap): List<AppItem> {
     return listOf(
         AppItem(
             "Calculator",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.calculator2",
             ""
         ),
         AppItem(
             "Calendar",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.calendar",
             ""
         ),
         AppItem(
             "Camera",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.camera",
             ""
         ),
         AppItem(
             "Gallery",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.gallery3d",
             ""
         )
     )
 }
 
-fun getDockApps(): List<AppItem> {
+fun getDockApps(default_icon: ImageBitmap): List<AppItem> {
     return listOf(
         AppItem(
             "Phone",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.dialer",
             ""
         ),
         AppItem(
             "Messages",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.messaging",
             ""
         ),
         AppItem(
             "Browser",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.chrome",
             ""
         ),
         AppItem(
             "Settings",
-            R.drawable.default_icon,
+            default_icon,
             "com.android.settings",
             ""
         )
