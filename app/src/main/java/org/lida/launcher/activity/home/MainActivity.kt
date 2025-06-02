@@ -9,9 +9,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
@@ -73,7 +76,18 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AndroidLauncherHomeScreen(accountViewModel)
+                    // Column(modifier = Modifier.fillMaxSize()) {
+                        AndroidLauncherHomeScreen(accountViewModel)
+
+                        Button(
+                            onClick = {
+                                val intent = Intent(this@MainActivity, AppList::class.java)
+                                startActivity(intent)
+                            }
+                        ) {
+                            Text(text = "Ir para lista de apps")
+                        }
+                    // }
                 }
             }
         }
