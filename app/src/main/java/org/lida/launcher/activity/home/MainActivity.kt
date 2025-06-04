@@ -20,6 +20,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+
 import kotlinx.coroutines.launch
 import org.lida.launcher.AndroidLauncherHomeScreen
 import org.lida.launcher.components.SetStatusBarColor
@@ -72,22 +76,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             LIDATheme(dynamicColor = false) {
                 SetStatusBarColor(MaterialTheme.colorScheme.background.toArgb())
-                Surface(
+                Column(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
                 ) {
-                    // Column(modifier = Modifier.fillMaxSize()) {
-                        AndroidLauncherHomeScreen(accountViewModel)
+                    Button(
+                        onClick = {
+                            val intent = Intent(this@MainActivity, AppList::class.java)
+                            startActivity(intent)
+                        },
+                        modifier = Modifier.height(50.dp).fillMaxWidth()
+                    ) {
+                        Text(text = "Ir para lista de apps")
+                    }
 
-                        Button(
-                            onClick = {
-                                val intent = Intent(this@MainActivity, AppList::class.java)
-                                startActivity(intent)
-                            }
-                        ) {
-                            Text(text = "Ir para lista de apps")
-                        }
-                    // }
+                    AndroidLauncherHomeScreen(accountViewModel)
                 }
             }
         }
