@@ -15,14 +15,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import org.lida.launcher.R
 import org.lida.launcher.components.AppIcon
 import org.lida.launcher.components.AppItem
 import org.lida.launcher.ui.theme.LIDATheme
 import org.lida.launcher.components.SetStatusBarColor
+import kotlinx.coroutines.delay
+import org.lida.launcher.utils.drawableToBitmap
+
 
 // https://stackoverflow.com/questions/28679346/how-do-i-uninstall-and-re-run-an-app-on-a-device-using-android-studio
 // para testar
@@ -65,9 +68,20 @@ fun AppListScreen() {
                 .padding(8.dp)
         )
 
-        val filteredApps = apps.filter {
-            it.name.contains(searchQuery, ignoreCase = true)
+        var searchQuery by remember { mutableStateOf("") }
+        var debouncedSearch by remember { mutableStateOf("") }
+
+        LaunchedEffect(searchQuery) {
+            delay(300)
+            debouncedSearch = searchQuery
         }
+
+        val filteredApps by remember(apps, debouncedSearch) {
+            derivedStateOf {
+                apps.filter { it.name.contains(debouncedSearch, ignoreCase = true) }
+            }
+        }
+
 
         if (apps.isNotEmpty()) {
             val appCountText = if (searchQuery.isNotBlank() && filteredApps.size != apps.size) {
@@ -115,20 +129,19 @@ fun AppListScreen() {
 
 fun loadInstalledApps(packageManager: PackageManager): List<AppItem> {
     val apps = mutableListOf<AppItem>()
-
-    // 1. Define the "Launcher App" Intent
     val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
         addCategory(Intent.CATEGORY_LAUNCHER)
     }
 
-    // 2. Query the PackageManager for matching activities
     val resolveInfoList = packageManager.queryIntentActivities(mainIntent, 0)
-    val defaultIconResId = R.drawable.default_icon
 
     for (resolveInfo in resolveInfoList) {
         val packageName = resolveInfo.activityInfo.packageName
         val appName = resolveInfo.loadLabel(packageManager).toString()
-        apps.add(AppItem(appName, defaultIconResId, packageName, ""))
+        val drawable = resolveInfo.loadIcon(packageManager)
+        val bitmap = drawableToBitmap(drawable).asImageBitmap()
+
+        apps.add(AppItem(appName, bitmap, packageName, ""))
     }
 
     return apps.sortedBy { it.name.lowercase() }

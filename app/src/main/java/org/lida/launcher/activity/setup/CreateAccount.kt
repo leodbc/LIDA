@@ -405,11 +405,13 @@ fun AccountForm(
             listOf("student", "parent").forEach { type ->
                 Button(
                     onClick = {
-                        onFormDataChange(formData.copy(accountType = type))
-                        onFormDataChange(formData.copy(password = ""))
+                        onFormDataChange(formData.copy(
+                            accountType = type,
+                            password = ""
+                        ))
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (formData.accountType == type) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary
+                        containerColor = if (formData.accountType == type) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(if (type == "student") "Criança" else "Responsável", color = MaterialTheme.colorScheme.onSurface)
@@ -455,7 +457,9 @@ fun AccountForm(
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onSaveClick,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -467,7 +471,9 @@ fun AccountForm(
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onCreateAnotherClick,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer

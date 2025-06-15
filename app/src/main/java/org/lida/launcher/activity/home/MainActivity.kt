@@ -11,10 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
@@ -25,7 +23,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 
 import kotlinx.coroutines.launch
-import org.lida.launcher.AndroidLauncherHomeScreen
 import org.lida.launcher.components.SetStatusBarColor
 import org.lida.launcher.activity.setup.LegalInfo
 import org.lida.launcher.ui.theme.LIDATheme
@@ -79,17 +76,10 @@ class MainActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    Button(
-                        onClick = {
-                            val intent = Intent(this@MainActivity, AppList::class.java)
-                            startActivity(intent)
-                        },
-                        modifier = Modifier.height(50.dp).fillMaxWidth()
-                    ) {
-                        Text(text = "Ir para lista de apps")
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        AndroidLauncherHomeScreen(accountViewModel)
                     }
 
-                    AndroidLauncherHomeScreen(accountViewModel)
                 }
             }
         }
