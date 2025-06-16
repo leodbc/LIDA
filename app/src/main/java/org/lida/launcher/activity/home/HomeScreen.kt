@@ -113,6 +113,14 @@ fun DockBar() {
         ) {
             Text(text = "Ir para lista de apps")
         }
+        Button(
+            onClick = {
+                val intent = Intent(context, DashboardActivity::class.java)
+                context.startActivity(intent)
+            },
+        ) {
+            Text(text = "Ir para monitoramento")
+        }
         dockApps.forEach { app ->
             IconButton(
                 onClick = {
