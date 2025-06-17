@@ -9,7 +9,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +31,7 @@ import org.lida.launcher.utils.AccountViewModel
 import org.lida.launcher.utils.drawableToBitmap
 
 @Composable
-fun AndroidLauncherHomeScreen(viewModel: AccountViewModel) {
+fun AndroidLauncherHomeScreen(viewModel: AccountViewModel, logout_fun: () -> Unit) {
     val context = LocalContext.current
     val packageManager = context.packageManager
     var currentUser by remember { mutableStateOf<String?>(null) }
@@ -84,13 +86,15 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel) {
             }
 
             // Dock - Bottom favorites
-            DockBar()
+            DockBar(logout_fun)
         }
     }
 }
 
+
+
 @Composable
-fun DockBar() {
+fun DockBar(logout_fun: () -> Unit) {
     val context = LocalContext.current
     val defaultIconDrawable = ContextCompat.getDrawable(context, R.drawable.default_icon)!!
     val bitmap = drawableToBitmap(defaultIconDrawable).asImageBitmap()
@@ -131,7 +135,6 @@ fun DockBar() {
                     Icon(
                         when (app.name) {
                             "Phone" -> Icons.Default.Call
-                            "Messages" -> Icons.Default.Email
                             "Browser" -> Icons.Default.LocationOn
                             "Settings" -> Icons.Default.Settings
                             else -> Icons.Default.Face
@@ -141,6 +144,26 @@ fun DockBar() {
                         modifier = Modifier.size(24.dp)
                     )
                 }
+            }
+        }
+        IconButton(
+            onClick = {
+                logout_fun()
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "logout",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -224,12 +247,6 @@ fun getDockApps(default_icon: ImageBitmap): List<AppItem> {
             "Phone",
             default_icon,
             "com.android.dialer",
-            ""
-        ),
-        AppItem(
-            "Messages",
-            default_icon,
-            "com.android.messaging",
             ""
         ),
         AppItem(
