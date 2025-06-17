@@ -111,7 +111,7 @@ fun DockBar() {
                 context.startActivity(intent)
             },
         ) {
-            Text(text = "Ir para lista de apps")
+            Text(text = "Apps")
         }
         Button(
             onClick = {
@@ -119,7 +119,7 @@ fun DockBar() {
                 context.startActivity(intent)
             },
         ) {
-            Text(text = "Ir para monitoramento")
+            Text(text = "Monit.")
         }
         dockApps.forEach { app ->
             IconButton(
