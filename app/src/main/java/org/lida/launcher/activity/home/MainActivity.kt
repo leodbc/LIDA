@@ -44,6 +44,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun logout(){
+        lifecycleScope.launch {
+            accountViewModel.logoutCurrentUser()
+            val loginIntent = Intent(this@MainActivity, LoginActivity::class.java)
+            startActivity(loginIntent)
+            finish()
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +86,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        AndroidLauncherHomeScreen(accountViewModel)
+                        AndroidLauncherHomeScreen(accountViewModel, logout_fun = { logout() })
                     }
 
                 }
