@@ -115,7 +115,7 @@ fun DockBar() {
         }
         Button(
             onClick = {
-                val intent = Intent(context, DashboardActivity::class.java)
+                val intent = Intent(context, MonitorDashboard::class.java)
                 context.startActivity(intent)
             },
         ) {

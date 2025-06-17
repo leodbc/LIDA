@@ -3,8 +3,6 @@ package org.lida.launcher.activity.home
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,22 +14,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.lifecycleScope // Used for coroutine scope in Activity context
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.lida.launcher.R // Assuming you have a drawable for the app icon, e.g., ic_launcher_round
 import org.lida.launcher.database.LauncherDatabase // You need to create this for Room
 import org.lida.launcher.database.AppUsageDao
 import org.lida.launcher.database.AppUsageEntity
@@ -40,82 +31,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-// Assume these are placeholder colors or define them in your Theme.kt
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
-
-val LightBlue = Color(0xFFADD8E6) // Example for "Limite de Tempo"
-val LightGreen = Color(0xFF90EE90) // Example for "Gerir Apps"
-val LightPurple = Color(0xFFD8BFD8) // Example for "Monitoramento"
-val LightYellow = Color(0xFFFFFFE0) // Example for "Objetivos"
-
-
-// --- ViewModel ---
-class DashboardViewModel(private val appUsageDao: AppUsageDao) : ViewModel() {
-
-    private val _totalUsageToday = MutableStateFlow(0L)
-    val totalUsageToday: StateFlow<Long> = _totalUsageToday
-
-    private val _educationalUsageToday = MutableStateFlow(0L) // Placeholder for educational usage
-    val educationalUsageToday: StateFlow<Long> = _educationalUsageToday
-
-    private val _goalsMetToday = MutableStateFlow(0) // Placeholder for goals met
-    val goalsMetToday: StateFlow<Int> = _goalsMetToday
-
-    private val _recentAppUsage = MutableStateFlow<List<AppUsageSummary>>(emptyList())
-    val recentAppUsage: StateFlow<List<AppUsageSummary>> = _recentAppUsage
-
-    init {
-        fetchDashboardData()
-    }
-
-    private fun fetchDashboardData(who: Int = 1) { // 'who' parameter for selecting child
-        viewModelScope.launch {
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            val startTimeToday = calendar.timeInMillis
-            val endTimeToday = System.currentTimeMillis()
-
-            // Fetch total usage for today
-            val allUsageToday = appUsageDao.getUsageInTimeRange(startTimeToday, endTimeToday)
-            _totalUsageToday.value = allUsageToday.sumOf { it.durationMs }
-
-            // Placeholder: For educational usage, you'd need a way to mark apps as educational.
-            // For now, let's assume it's a fixed value or based on a separate logic.
-            _educationalUsageToday.value = 45 * 60 * 1000L // 45 minutes as per design
-
-            // Placeholder: Goals met
-            _goalsMetToday.value = 3 // As per design
-
-            // Fetch recent app usage summary for the selected child
-            _recentAppUsage.value = appUsageDao.getAppUsageSummary(who)
-        }
-    }
-
-    // You might want a function to change the 'who' (child) and refetch data
-    fun selectChild(childId: Int) {
-        fetchDashboardData(childId)
-    }
-}
-
-// ViewModel Factory to pass DAO to ViewModel
-class DashboardViewModelFactory(private val appUsageDao: AppUsageDao) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return DashboardViewModel(appUsageDao) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
+val LightBlue = Color(0xFF87CEEB) // Example for "Limite de Tempo"
+val LightGreen = Color(0xFF7CFC00) // Example for "Gerir Apps"
+val LightPurple = Color(0xFFBF80FF) // Example for "Monitoramento"
+val LightYellow = Color(0xFFFDD835) // Example for "Objetivos"
 
 // --- Activity ---
-class DashboardActivity : ComponentActivity() {
+class MonitorDashboard : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -128,7 +50,11 @@ class DashboardActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DashboardScreen(appUsageDao = appUsageDao)
+                    // Pass the DAO directly to the composable
+                    DashboardScreen(
+                        appUsageDao = appUsageDao,
+                        lifecycleScope = lifecycleScope // Pass lifecycleScope for coroutines
+                    )
                 }
             }
         }
@@ -138,15 +64,45 @@ class DashboardActivity : ComponentActivity() {
 // --- UI Composable ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(appUsageDao: AppUsageDao) {
-    val viewModel: DashboardViewModel = viewModel( // ViewModel initialized here
-        factory = DashboardViewModelFactory(appUsageDao)
-    )
+fun DashboardScreen(appUsageDao: AppUsageDao, lifecycleScope: CoroutineScope) {
+    // State variables to hold the data, now directly in the composable
+    var totalUsageToday by remember { mutableLongStateOf(0L) }
+    var educationalUsageToday by remember { mutableLongStateOf(0L) }
+    var goalsMetToday by remember { mutableIntStateOf(0) }
+    var recentAppUsage by remember { mutableStateOf<List<AppUsageSummary>>(emptyList()) }
 
-    val totalUsageToday by viewModel.totalUsageToday.collectAsState()
-    val educationalUsageToday by viewModel.educationalUsageToday.collectAsState()
-    val goalsMetToday by viewModel.goalsMetToday.collectAsState()
-    val recentAppUsage by viewModel.recentAppUsage.collectAsState()
+    val children = remember { listOf("Criança 1", "Criança 2") } // Example children
+    var selectedChildIndex by remember { mutableIntStateOf(0) } // Default to Criança 1
+    val selectedChildName = children[selectedChildIndex]
+
+    // LaunchedEffect to fetch data whenever the appUsageDao or selectedChildIndex changes
+    LaunchedEffect(appUsageDao, selectedChildIndex) {
+        val who = selectedChildIndex + 1 // Assuming child IDs start from 1
+
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startTimeToday = calendar.timeInMillis
+        val endTimeToday = System.currentTimeMillis()
+
+        lifecycleScope.launch {
+            // Fetch total usage for today
+            val allUsage = appUsageDao.getUsageInTimeRange(startTimeToday, endTimeToday)
+            totalUsageToday = allUsage.sumOf { it.durationMs }
+
+            // Placeholder: For educational usage, you'd need a way to mark apps as educational.
+            // For now, let's assume it's a fixed value or based on a separate logic.
+            educationalUsageToday = 45 * 60 * 1000L // 45 minutes as per design
+
+            // Placeholder: Goals met
+            goalsMetToday = 3 // As per design
+
+            // Fetch recent app usage summary for the selected child
+            recentAppUsage = appUsageDao.getAppUsageSummary(who)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -155,11 +111,9 @@ fun DashboardScreen(appUsageDao: AppUsageDao) {
                 actions = {
                     // Placeholder for child selection dropdown
                     var expanded by remember { mutableStateOf(false) }
-                    val children = listOf("Criança 1", "Criança 2") // Example children
-                    var selectedChild by remember { mutableStateOf(children[0]) }
 
                     TextButton(onClick = { expanded = true }) {
-                        Text(selectedChild)
+                        Text(selectedChildName)
                         Icon(Icons.Default.List, contentDescription = "Select child")
                     }
                     DropdownMenu(
@@ -170,9 +124,8 @@ fun DashboardScreen(appUsageDao: AppUsageDao) {
                             DropdownMenuItem(
                                 text = { Text(child) },
                                 onClick = {
-                                    selectedChild = child
+                                    selectedChildIndex = index
                                     expanded = false
-                                    viewModel.selectChild(index + 1) // Assuming child IDs start from 1
                                 }
                             )
                         }
@@ -216,7 +169,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao) {
             )
 
             Text(
-                text = "Resumo de Hoje", // ($selectedChild)",
+                text = "Resumo de Hoje ($selectedChildName)",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -421,5 +374,37 @@ fun formatMillisToHoursMinutes(milliseconds: Long): String {
         "${hours}h ${minutes}m"
     } else {
         "${minutes}m"
+    }
+}
+
+// --- Preview ---
+@Preview(showBackground = true)
+@Composable
+fun PreviewDashboardScreen() {
+    MaterialTheme {
+        // Create a mock DAO for preview purposes
+        val mockDao = object : AppUsageDao {
+            override suspend fun insert(appUsage: AppUsageEntity): Long = 0L
+            override suspend fun update(appUsage: AppUsageEntity) {}
+            override suspend fun getLatestByPackage(packageName: String, limit: Int): List<AppUsageEntity> = emptyList()
+            override suspend fun getUsageInTimeRange(startTime: Long, endTime: Long): List<AppUsageEntity> {
+                // Mock data for preview
+                return listOf(
+                    AppUsageEntity(packageName = "com.example.app1", startTime = 0, endTime = 1000 * 60 * 60, durationMs = 1000 * 60 * 60, who = 1), // 1 hour
+                    AppUsageEntity(packageName = "com.example.app2", startTime = 0, endTime = 1000 * 60 * 30, durationMs = 1000 * 60 * 30, who = 1) // 30 minutes
+                )
+            }
+            override suspend fun getAppUsageSummary(startTime: Long, endTime: Long): List<AppUsageSummary> = emptyList()
+            override suspend fun getTotalUsageTime(packageName: String, startTime: Long, endTime: Long): Long? = 0L
+            override suspend fun getUsageByHourOfDay(packageName: String, startTime: Long, endTime: Long): Map<String, Long> = emptyMap()
+            override suspend fun getAppUsageSummary(who: Int): List<AppUsageSummary> = listOf(
+                AppUsageSummary("com.example.game", 50 * 60 * 1000L, 5, 1),
+                AppUsageSummary("com.example.eduapp", 20 * 60 * 1000L, 3, 1)
+            )
+        }
+        // In preview, we can't directly use lifecycleScope from an Activity.
+        // For simplicity in preview, we'll pass a rememberCoroutineScope().
+        // In a real app, ensure you pass the correct scope.
+        DashboardScreen(appUsageDao = mockDao, lifecycleScope = rememberCoroutineScope())
     }
 }
