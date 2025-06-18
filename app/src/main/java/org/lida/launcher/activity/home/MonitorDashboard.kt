@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -37,6 +38,8 @@ val LightBlue = Color(0xFF87CEEB) // Example for "Limite de Tempo"
 val LightGreen = Color(0xFF7CFC00) // Example for "Gerir Apps"
 val LightPurple = Color(0xFFBF80FF) // Example for "Monitoramento"
 val LightYellow = Color(0xFFFDD835) // Example for "Objetivos"
+
+enum class TimePeriod { DAILY, WEEKLY }
 
 // --- Activity ---
 class MonitorDashboard : ComponentActivity() {
@@ -74,11 +77,13 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
     var totalUsageToday by remember { mutableLongStateOf(0L) }
     var educationalUsageToday by remember { mutableLongStateOf(0L) }
     var goalsMetToday by remember { mutableIntStateOf(0) }
-    var recentAppUsage by remember { mutableStateOf<List<AppUsageSummary>>(emptyList()) }
 
     var childrenUsers by remember { mutableStateOf<List<UserEntity>>(emptyList()) }
     var selectedChild by remember { mutableStateOf<UserEntity?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) } // State for dropdown menu
+
+    var selectedTimePeriod by remember { mutableStateOf(TimePeriod.DAILY) }
+    var top5AppsUsage by remember { mutableStateOf<List<AppUsageSummary>>(emptyList()) }
 
     val showContent = selectedChild != null
 
@@ -99,35 +104,57 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
             val who = child.userId.toInt() // Use the userId of the selected child
 
             val calendar = Calendar.getInstance()
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            val startTimeToday = calendar.timeInMillis
-            val endTimeToday = System.currentTimeMillis()
+            val endTime = System.currentTimeMillis()
+            val startTime: Long
+
+            when (selectedTimePeriod) {
+                TimePeriod.DAILY -> {
+                    calendar.set(Calendar.HOUR_OF_DAY, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    startTime = calendar.timeInMillis
+                }
+                TimePeriod.WEEKLY -> {
+                    calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+                    calendar.set(Calendar.HOUR_OF_DAY, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    startTime = calendar.timeInMillis
+                }
+            }
 
             lifecycleScope.launch {
-                // Fetch total usage for today
-                val allUsage = appUsageDao.getUsageInTimeRange(startTimeToday, endTimeToday)
-                // Filter by the selected child's 'who' (userId)
-                totalUsageToday = allUsage.filter { it.who == who }.sumOf { it.durationMs }
-
+                // Fetch total usage for today (always daily for the summary cards)
+                val dailyCalendar = Calendar.getInstance()
+                dailyCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                dailyCalendar.set(Calendar.MINUTE, 0)
+                dailyCalendar.set(Calendar.SECOND, 0)
+                dailyCalendar.set(Calendar.MILLISECOND, 0)
+                val dailyStartTime = dailyCalendar.timeInMillis
+                val allDailyUsage = appUsageDao.getUsageInTimeRange(dailyStartTime, endTime)
+                totalUsageToday = allDailyUsage.filter { it.who == who }.sumOf { it.durationMs }
+                print(allDailyUsage)
                 // Placeholder: For educational usage, you'd need a way to mark apps as educational.
                 // For now, let's assume it's a fixed value or based on a separate logic.
-                educationalUsageToday = 45 * 60 * 1000L // 45 minutes as per design
+                educationalUsageToday = totalUsageToday/2
 
                 // Placeholder: Goals met
                 goalsMetToday = 3 // As per design
 
-                // Fetch recent app usage summary for the selected child
-                recentAppUsage = appUsageDao.getAppUsageSummary(who)
+                // Fetch top 5 app usage based on selected time period
+                top5AppsUsage = appUsageDao.getAppUsageSummary(startTime, endTime)
+                    .filter { it.who == who } // Filter by selected child
+                    .sortedByDescending { it.totalDuration } // Ensure sorted
+                    .take(5) // Take top 5
             }
         } ?: run {
             // Reset data if no child is selected
             totalUsageToday = 0L
             educationalUsageToday = 0L
             goalsMetToday = 0
-            recentAppUsage = emptyList()
+            top5AppsUsage = emptyList() // Clear top apps list
         }
     }
 
@@ -139,7 +166,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
                     // Child selection dropdown
                     TextButton(onClick = { dropdownExpanded = true }) {
                         Text(selectedChild?.username ?: "Selecione Criança")
-                        Icon(Icons.Default.List, contentDescription = "Select child")
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Select child")
                     }
                     DropdownMenu(
                         expanded = dropdownExpanded,
@@ -177,7 +204,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
                 .padding(16.dp)
         ) {
             Text(
-                text = "Monitoramento de uso",
+                text = "Monitoramento de uso - ${selectedChild?.username ?: "..."}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -185,7 +212,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
 
             if (showContent) {
                 Text(
-                    text = "Resumo de Hoje (${selectedChild?.username ?: "..."})", // Display selected child's name
+                    text = "Resumo de Hoje", // Display selected child's name
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -234,35 +261,66 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Placeholder for "Gráfico de uso de Apps"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    SegmentedButton(
+                        selected = selectedTimePeriod == TimePeriod.DAILY,
+                        onClick = { selectedTimePeriod = TimePeriod.DAILY },
+                        label = { Text("Diário") }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    SegmentedButton(
+                        selected = selectedTimePeriod == TimePeriod.WEEKLY,
+                        onClick = { selectedTimePeriod = TimePeriod.WEEKLY },
+                        label = { Text("Semanal") }
+                    )
+                }
+
+                // List of Top 5 Apps
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .wrapContentHeight(), // Use wrapContentHeight for the list
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Star, // Placeholder icon
-                            contentDescription = "Gráfico de uso de Apps",
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
                         Text(
-                            text = "Gráfico de uso de Apps",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            text = "Top 5 Apps",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
+                        if (top5AppsUsage.isNotEmpty()) {
+                            top5AppsUsage.forEachIndexed { index, app ->
+                                AppUsageItem(
+                                    appName = app.packageName.substringAfterLast("."), // Extract simple app name
+                                    duration = formatMillisToHoursMinutes(app.totalDuration),
+                                    index = index + 1
+                                )
+                                if (index < top5AppsUsage.size - 1) {
+                                    Divider(modifier = Modifier.padding(vertical = 4.dp))
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "Nenhum dado de uso encontrado para o período.",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = 16.dp)
+                            )
+                        }
                     }
                 }
 
-                // You can iterate over recentAppUsage to show a list of apps if needed.
-                // For now, only the graph placeholder is in the design.
             }
             else{
                 Column(
@@ -378,7 +436,7 @@ fun QuickAccessButton(
 ) {
     Card(
         modifier = modifier
-            .height(120.dp)
+            .height(100.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
@@ -395,7 +453,7 @@ fun QuickAccessButton(
                 modifier = Modifier.size(48.dp),
                 tint = Color.White // Or a contrasting color
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = label,
                 color = Color.Black, // Or a contrasting color
@@ -403,6 +461,40 @@ fun QuickAccessButton(
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@Composable
+fun AppUsageItem(appName: String, duration: String, index: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "$index.", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = appName, fontSize = 16.sp, maxLines = 1)
+        }
+        Text(text = duration, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SegmentedButton(selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primary else Color.LightGray,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else Color.DarkGray
+        ),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.wrapContentWidth()
+    ) {
+        label()
     }
 }
 
