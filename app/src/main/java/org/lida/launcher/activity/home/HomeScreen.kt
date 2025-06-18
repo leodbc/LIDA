@@ -35,6 +35,7 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel, logout_fun: () -> Uni
     val context = LocalContext.current
     val packageManager = context.packageManager
     var currentUser by remember { mutableStateOf<String?>(null) }
+    var currentUserType by remember { mutableStateOf<String?>(null) }
     val defaultIconDrawable = ContextCompat.getDrawable(context, R.drawable.default_icon)!!
     val bitmap = drawableToBitmap(defaultIconDrawable).asImageBitmap()
     val educationalApps = remember { getEducationalApps(bitmap) }
@@ -45,6 +46,7 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel, logout_fun: () -> Uni
     LaunchedEffect(Unit) {
         viewModel.getCurrentUser()?.let { user ->
             currentUser = user.username
+            currentUserType = user.accountType
         }
     }
 
@@ -86,7 +88,7 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel, logout_fun: () -> Uni
             }
 
             // Dock - Bottom favorites
-            DockBar(logout_fun)
+            DockBar(logout_fun, currentUserType)
         }
     }
 }
@@ -94,7 +96,7 @@ fun AndroidLauncherHomeScreen(viewModel: AccountViewModel, logout_fun: () -> Uni
 
 
 @Composable
-fun DockBar(logout_fun: () -> Unit) {
+fun DockBar(logout_fun: () -> Unit, currentUserType:String?) {
     val context = LocalContext.current
     val defaultIconDrawable = ContextCompat.getDrawable(context, R.drawable.default_icon)!!
     val bitmap = drawableToBitmap(defaultIconDrawable).asImageBitmap()
@@ -115,7 +117,17 @@ fun DockBar(logout_fun: () -> Unit) {
                 context.startActivity(intent)
             },
         ) {
-            Text(text = "Ir para lista de apps")
+            Text(text = "Apps")
+        }
+        if(currentUserType != "student") {
+            Button(
+                onClick = {
+                    val intent = Intent(context, MonitorDashboard::class.java)
+                    context.startActivity(intent)
+                },
+            ) {
+                Text(text = "Monit.")
+            }
         }
         dockApps.forEach { app ->
             IconButton(

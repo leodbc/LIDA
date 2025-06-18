@@ -55,10 +55,15 @@
         <activity
             android:name=".activity.home.AppList"
             android:exported="false"
-            android:label="Second Activity"
+            android:label="App List"
             android:theme="@style/Theme.LIDA">
         </activity>
-
+        <activity
+            android:name=".activity.home.MonitorDashboard"
+            android:exported="false"
+            android:label="Monitor Dashboard"
+            android:theme="@style/Theme.LIDA">
+        </activity>
 
         <service
             android:name=".service.AppUsageService"

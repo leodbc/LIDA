@@ -58,6 +58,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0") // Use the latest stable version
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0") // Use the latest stable version
 
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)
