@@ -33,6 +33,9 @@ import org.lida.launcher.database.UserEntity // Import UserEntity
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import android.util.Log
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 val LightBlue = Color(0xFF87CEEB) // Example for "Limite de Tempo"
 val LightGreen = Color(0xFF7CFC00) // Example for "Gerir Apps"
@@ -41,6 +44,7 @@ val LightYellow = Color(0xFFFDD835) // Example for "Objetivos"
 
 enum class TimePeriod { DAILY, WEEKLY }
 
+private val TAG: String = MonitorDashboard::class.java.simpleName
 // --- Activity ---
 class MonitorDashboard : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,6 +89,8 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.DAILY) }
     var top5AppsUsage by remember { mutableStateOf<List<AppUsageSummary>>(emptyList()) }
 
+    val scrollState = rememberScrollState()
+
     val showContent = selectedChild != null
 
     // LaunchedEffect to fetch all student users initially
@@ -105,25 +111,6 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
 
             val calendar = Calendar.getInstance()
             val endTime = System.currentTimeMillis()
-            val startTime: Long
-
-            when (selectedTimePeriod) {
-                TimePeriod.DAILY -> {
-                    calendar.set(Calendar.HOUR_OF_DAY, 0)
-                    calendar.set(Calendar.MINUTE, 0)
-                    calendar.set(Calendar.SECOND, 0)
-                    calendar.set(Calendar.MILLISECOND, 0)
-                    startTime = calendar.timeInMillis
-                }
-                TimePeriod.WEEKLY -> {
-                    calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-                    calendar.set(Calendar.HOUR_OF_DAY, 0)
-                    calendar.set(Calendar.MINUTE, 0)
-                    calendar.set(Calendar.SECOND, 0)
-                    calendar.set(Calendar.MILLISECOND, 0)
-                    startTime = calendar.timeInMillis
-                }
-            }
 
             lifecycleScope.launch {
                 // Fetch total usage for today (always daily for the summary cards)
@@ -135,7 +122,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
                 val dailyStartTime = dailyCalendar.timeInMillis
                 val allDailyUsage = appUsageDao.getUsageInTimeRange(dailyStartTime, endTime)
                 totalUsageToday = allDailyUsage.filter { it.who == who }.sumOf { it.durationMs }
-                print(allDailyUsage)
+
                 // Placeholder: For educational usage, you'd need a way to mark apps as educational.
                 // For now, let's assume it's a fixed value or based on a separate logic.
                 educationalUsageToday = totalUsageToday/2
@@ -144,9 +131,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
                 goalsMetToday = 3 // As per design
 
                 // Fetch top 5 app usage based on selected time period
-                top5AppsUsage = appUsageDao.getAppUsageSummary(startTime, endTime)
-                    .filter { it.who == who } // Filter by selected child
-                    .sortedByDescending { it.totalDuration } // Ensure sorted
+                top5AppsUsage = appUsageDao.getAppUsageSummary(who)
                     .take(5) // Take top 5
             }
         } ?: run {
@@ -201,6 +186,7 @@ fun DashboardScreen(appUsageDao: AppUsageDao, userDao: UserDao, lifecycleScope: 
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
             Text(

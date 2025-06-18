@@ -12,6 +12,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import org.lida.launcher.database.AppUsageEntity
 import org.lida.launcher.database.LauncherDatabase
+import org.lida.launcher.utils.AccountViewModel
 
 class AppUsageService() : Service() {
     private val TAG = "AppUsageService"
@@ -43,10 +44,11 @@ class AppUsageService() : Service() {
         }
     }
 
-    private fun checkCurrentApp() {
+    private suspend fun checkCurrentApp() {
+        val accountViewModel = AccountViewModel(application)
         val endTime = System.currentTimeMillis()
         val startTime = endTime - 5000
-        val currentUserId = 1 // TODO; replace with user id
+        val currentUserId = accountViewModel.getCurrentUser()?.userId
 
         val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
         val event = UsageEvents.Event()
@@ -71,7 +73,7 @@ class AppUsageService() : Service() {
             lastTimeStamp = currentTime
 
             Log.d(TAG, "Current foreground app: $currentApp")
-            saveAppUsageStart(currentApp, currentTime, currentUserId)
+            saveAppUsageStart(currentApp, currentTime, currentUserId?.toInt() ?: 0 )
         }
     }
 
